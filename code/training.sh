@@ -34,7 +34,7 @@
 
 
 # Bicubic multicale
-#th main.lua -scale 2_3_4 -netType multiscale -nResBlock 80 -patchSize 64 -multiPatch true -skipBatch 3
+th main.lua -scale 2_3_4 -netType multiscale_unknown -patchSize 48 -multiPatch true -skipBatch 3 -datadir ../../dataset -save jpeg_test -datatype png 
 
 # Unknown multiscale with L1 loss from pre-trained bicubic multiscale model
 #th main.lua -scale 2_3_4 -degrade unknown -netType multiscale_unknown -nResBlock 80 -patchSize 64 -multiPatch true -skipBatch 3 -preTrained ../demo/model/bicubic_multiscale.t7

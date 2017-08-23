@@ -35,10 +35,7 @@ function div2k:__init(opt, split)
     self.dirInp, self.dirInp_aug = {}, {}
 
     for i = 1, #self.scale do
-		table.insert(self.dirInp, paths.concat(apath, tLR .. opt.degrade, 'X' .. self.scale[i]))
-		if opt.augUnkDIV2K then
-            table.insert(self.dirInp_aug, paths.concat(apath, tLR .. opt.degrade .. '_augment', 'X' .. self.scale[i]))
-		end
+		table.insert(self.dirInp, paths.concat(apath, tLR .. opt.degrade .. '_75', 'X' .. self.scale[i]))
         self.dirInp[i] = opt.dataSize == 'small' and self.dirInp[i] or self.dirInp[i]
         self.dirInp[i] = opt.netType ~= 'recurVDSR' and self.dirInp[i] or self.dirInp[i] .. '_SRresOutput'
     end
@@ -141,17 +138,7 @@ function div2k:get(idx, scaleIdx)
     elseif rot == 8 then
         target = (image.hflip(image.vflip(target))):transpose(2,3)
     end
---[[    
-    if rot % 2 == 0 then
-        target = image.vflip(target)
-    end
-    if (rot - 1) % 4 > 1 then
-        target = image.hflip(target)
-    end
-    if rot > 4 then
-        target = target:transpose(2, 3)
-    end
-]]
+
     local _, h, w = unpack(target:size():totable())
     local hInput, wInput = math.floor(h / scale), math.floor(w / scale)
     local hTarget, wTarget = scale * hInput, scale * wInput
@@ -183,51 +170,6 @@ function div2k:get(idx, scaleIdx)
         target = target:float():mul(self.opt.mulImg / 255)
     end
 
-    --Reject the patch that has small size of spatial gradient
-    if self.split == 'train' and self.opt.rejection ~= -1 then
-        local grT, grP = nil, nil
-        if self.opt.rejectionType == 'input' then
-            grT, grP = input, inputPatch
-        elseif self.opt.rejectionType == 'target' then
-            grT, grP = target, targetPatch
-        end
-
-        local dx = grT[{{}, {1, grP - 1}, {1, grP - 1}}] - grT[{{}, {1, grP - 1}, {2, grP}}]
-        local dy = grT[{{}, {1, grP - 1}, {1, grP - 1}}] - grT[{{}, {2, grP}, {1, grP - 1}}]
-        local dsum = dx:pow(2) + dy:pow(2)
-        local dsqrt = dsum:sqrt()
-        local gradValue = dsqrt:view(-1):mean()
-        
-        if self.gradStatistics == nil then
-            self.gradSamples = self.opt.nGradStat
-            self.gsTable = {}
-            self.gradStatistics = {}
-            for i = 1, #self.scale do
-                table.insert(self.gsTable, {})
-                table.insert(self.gradStatistics, -1)
-            end
-            print('Caculating median of gradient for ' .. self.gradSamples .. ' samples...')
-            return nil
-        end
-        
-        if #self.gsTable[scaleIdx] < self.gradSamples then
-            table.insert(self.gsTable[scaleIdx], gradValue)
-            return nil
-        else
-            if self.gradStatistics[scaleIdx] == -1 then
-                local threshold = math.floor(self.gradSamples * self.opt.rejection / 100)
-                table.sort(self.gsTable[scaleIdx])
-                self.gradStatistics[scaleIdx] = self.gsTable[scaleIdx][threshold]
-                print('Gradient threshold for scale ' .. self.scale[scaleIdx] .. ': ' .. self.gradStatistics[scaleIdx])
-                return nil
-            else
-                if gradValue <= self.gradStatistics[scaleIdx] then
-                    return nil
-                end
-            end
-        end
-    end
-
     return {
         input = input,
         target = target
@@ -245,15 +187,6 @@ end
 function div2k:augment()
     if self.split == 'train' and self.opt.degrade == 'bicubic' then
         local transforms = {}
-        if self.opt.colorAug then
-            table.insert(transforms,
-                transform.ColorJitter({
-                    brightness = 0.1,
-                    contrast = 0.1,
-                    saturation = 0.1
-                })
-            )
-        end
         -- We don't need vertical flip, since hflip + rotation covers it
         table.insert(transforms, transform.HorizontalFlip())
         table.insert(transforms, transform.Rotation())
@@ -274,23 +207,7 @@ function div2k:getFileName(idx, scale)
     end
 
     local targetName = fileName .. self.ext
-    local inputName = nil
-    local rot
-    if scale == 1 then
-        inputName = targetName
-    else
-        if self.opt.netType == 'recurVDSR' then
-            inputName = 'SRres' .. fileName .. 'x' .. scale .. self.ext
-        else
-            if self.split == 'train' and self.opt.augUnkDIV2K then
-                rot = math.random(1,8)
-                inputName = fileName .. 'x' .. scale .. '_' .. rot .. self.ext
-            else
-                rot = nil
-                inputName = fileName .. 'x' .. scale .. self.ext
-            end
-        end
-    end
+    local inputName = fileName .. 'x' .. scale .. '.jpeg'
 
     return inputName, targetName, rot
 end
