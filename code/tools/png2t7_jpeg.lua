@@ -36,7 +36,7 @@ lrDir = {}
 if opt.lr then
     lrDir =  
     {
-        'DIV2K_train_LR_bicubic_75',
+        'DIV2K_train_LR_bicubic_100',
     }
 end
 

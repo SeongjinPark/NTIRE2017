@@ -35,9 +35,14 @@ function div2k:__init(opt, split)
     self.dirInp, self.dirInp_aug = {}, {}
 
     for i = 1, #self.scale do
-		table.insert(self.dirInp, paths.concat(apath, tLR .. opt.degrade .. '_75', 'X' .. self.scale[i]))
-        self.dirInp[i] = opt.dataSize == 'small' and self.dirInp[i] or self.dirInp[i]
-        self.dirInp[i] = opt.netType ~= 'recurVDSR' and self.dirInp[i] or self.dirInp[i] .. '_SRresOutput'
+		table.insert(
+            self.dirInp,
+            paths.concat(
+                apath,
+                tLR .. opt.degrade .. '_' .. opt.jpegQuality,
+                'X' .. self.scale[i]
+            )
+        )
     end
 
     --Load single .t7 files that contains all dataset

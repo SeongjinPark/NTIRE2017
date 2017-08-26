@@ -1,8 +1,9 @@
 scale = [2, 3, 4];
 dataset = 'DIV2K';
-apath = '../../../../dataset';
+apath = '../../../dataset';
+quality = 100
 hrDir = fullfile(apath, dataset, 'DIV2K_train_HR');
-lrDir = fullfile(apath, dataset, 'DIV2K_train_LR_bicubic_75');
+lrDir = fullfile(apath, dataset, ['DIV2K_train_LR_bicubic_', num2str(quality)]);
 
 if ~exist(lrDir, 'dir')
     mkdir(lrDir)
@@ -35,7 +36,7 @@ for idx = 1:length(hrImgs)
         imwrite( ...
             lrImg, ...
             fullfile(lrDir, sprintf('X%d', scale(sc)), lrName), ...
-            'quality', 75);
+            'quality', quality);
     end
     if mod(idx, 100) == 0
         fprintf('Processed %d / %d images\n', idx, length(hrImgs));

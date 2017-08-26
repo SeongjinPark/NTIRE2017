@@ -41,6 +41,8 @@ function M.parse(arg)
     cmd:option('-flickr2kSize',     2650,               'Number of images in Flickr2K dataset')
     cmd:option('-imagenetSize',     50000,               'Number of images in Flickr2K dataset')
     cmd:option('-nGradStat',        1e4,                'Number of patches used for calulating gradient statistics')
+
+    cmd:option('-jpegQuality',      100,                'jpeg compression quality')
     -- Training
     cmd:option('-nEpochs',          300,                'Number of total epochs to run. 0: Infinite')
     cmd:option('-startEpoch',       0,                  'Manual epoch number for resuming the training. Default is the end')
